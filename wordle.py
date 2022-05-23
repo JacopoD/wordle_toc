@@ -12,8 +12,8 @@ CHARS = {letter:idx for idx, letter in enumerate(CHARS_2)}
 DICT_PATH = "/usr/share/dict/words"
 
 
-# TARGET = "teddy"
-TARGET = "world"
+TARGET = "teddy"
+# TARGET = "world"
 
 def main():
     solver = z3.Solver()
@@ -113,27 +113,27 @@ def get_filtered_dict():
                 words.add(l)
     return words
 
-# def add_only_words_in_dict_constraint(solver, char_vars, dict: set):
-#     all_w_constaints = []
-#     for w in dict:
-#         w_constraint = []
-#         for i in range(WL):
-#             w_constraint.append(char_vars[i] == CHARS[w[i]])
-#         all_w_constaints.append(z3.And(w_constraint))
-    
-#     solver.add(z3.Or(all_w_constaints))
-#     return solver
-
 def add_only_words_in_dict_constraint(solver, char_vars, dict: set):
-    all_words_disjunction = []
-
-    for word in dict:
-        word_conjuction = z3.And([char_vars[index] == CHARS[letter] for index, letter in enumerate(word)])
-        all_words_disjunction.append(word_conjuction)
-
-    solver.add(z3.Or(all_words_disjunction))
-
+    all_w_constaints = []
+    for w in dict:
+        w_constraint = []
+        for i in range(WL):
+            w_constraint.append(char_vars[i] == CHARS[w[i]])
+        all_w_constaints.append(z3.And(w_constraint))
+    
+    solver.add(z3.Or(all_w_constaints))
     return solver
+
+# def add_only_words_in_dict_constraint(solver, char_vars, dict: set):
+#     all_words_disjunction = []
+
+#     for word in dict:
+#         word_conjuction = z3.And([char_vars[index] == CHARS[letter] for index, letter in enumerate(word)])
+#         all_words_disjunction.append(word_conjuction)
+
+#     solver.add(z3.Or(all_words_disjunction))
+
+#     return solver
 
 def add_banned_char_constraint(solver, char_vars, char):
     for c_v in char_vars:
@@ -141,13 +141,13 @@ def add_banned_char_constraint(solver, char_vars, char):
         # solver.add(z3.Not(z3.eq(c_v, char)))
     return solver
 
-# def add_must_contain_constraint(solver, char_vars, char):
-#     constraint = []
-#     for c_v in char_vars:
-#         constraint.append(c_v == CHARS[char])
+def add_must_contain_constraint(solver, char_vars, char):
+    constraint = []
+    for c_v in char_vars:
+        constraint.append(c_v == CHARS[char])
 
-#     solver.add(z3.Or(constraint))
-#     return solver
+    solver.add(z3.Or(constraint))
+    return solver
 
 def add_must_contain_constraint(solver, char_vars, char):
     solver.add(z3.Or([letter_var == CHARS[char] for letter_var in char_vars]))
@@ -165,36 +165,36 @@ def add_char_in_fixed_pos_constraint(solver, char_vars, char, pos):
     return solver
 
 
-# def add_only_one_time_constraint(solver, char_vars, char):
-#     one_time = []
-    
-#     for c_v in char_vars:
-#         rule = []
-#         rule.append(c_v == CHARS[char])
-#         for other_c_v in char_vars:
-#             if other_c_v == c_v:
-#                 continue
-#             rule.append(other_c_v != CHARS[char])
-#         one_time.append(z3.And(rule))
-
-#     solver.add(z3.Or(one_time))
-#     return solver
-
-
 def add_only_one_time_constraint(solver, char_vars, char):
-    unique_letter_disjunction = []
-
-    for letter_var in char_vars:
-        this_letter_conjunction = [letter_var == CHARS[char]]
-        for other_letter_var in char_vars:
-            if letter_var == other_letter_var:
+    one_time = []
+    
+    for c_v in char_vars:
+        rule = []
+        rule.append(c_v == CHARS[char])
+        for other_c_v in char_vars:
+            if other_c_v == c_v:
                 continue
-            this_letter_conjunction.append(other_letter_var != CHARS[char])
-        unique_letter_disjunction.append(z3.And(this_letter_conjunction))
+            rule.append(other_c_v != CHARS[char])
+        one_time.append(z3.And(rule))
 
-    solver.add(z3.Or(unique_letter_disjunction))
-
+    solver.add(z3.Or(one_time))
     return solver
+
+
+# def add_only_one_time_constraint(solver, char_vars, char):
+#     unique_letter_disjunction = []
+
+#     for letter_var in char_vars:
+#         this_letter_conjunction = [letter_var == CHARS[char]]
+#         for other_letter_var in char_vars:
+#             if letter_var == other_letter_var:
+#                 continue
+#             this_letter_conjunction.append(other_letter_var != CHARS[char])
+#         unique_letter_disjunction.append(z3.And(this_letter_conjunction))
+
+#     solver.add(z3.Or(unique_letter_disjunction))
+
+#     return solver
 
 
 if __name__ == "__main__":

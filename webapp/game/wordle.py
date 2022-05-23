@@ -69,12 +69,6 @@ def solve(target):
                 solver = add_must_contain_constraint(solver, char_vars, result_string[i])
                 solver = add_banned_char_in_pos_constraint(solver, char_vars, result_string[i], i)
 
-        # for i in range(5):
-        #     if score[i] == 0:
-        #         if (result_string[i] not in W):
-        #             solver = add_banned_char_constraint(solver, char_vars, result_string[i])
-        #         else:
-        #             solver = add_only_one_time_constraint(solver, char_vars, result_string[i])
         for i in range(5):
             if score[i] == 0:
                 if tot_char_score(result_string, result_string[i], score) == 0:
@@ -83,63 +77,6 @@ def solve(target):
     return solution
 
     
-
-# def main():
-#     solver = z3.Solver()
-#     char_vars = char_variables()
-
-#     solver = add_max_len_constraint(solver, char_vars)
-
-#     words = get_filtered_dict()
-
-#     solver = add_only_words_in_dict_constraint(solver, char_vars, words)
-
-#     W = [None,None,None,None,None]
-
-#     # result = solver.check()
-
-#     # print(result)
-
-#     attempts = 5
-
-#     while attempts >= 0:
-
-#         result = solver.check()
-
-#         result_string = model_to_string(char_vars, solver.model())
-#         print(result_string)
-
-#         score = wordleScore(TARGET, result_string)
-
-#         print(score)
-
-#         if sum(score) == 10:
-#             print("Done")
-#             return
-
-#         for i in range(5):
-#             if score[i] == 2:
-#                 W[i] = result_string[i]
-#                 solver = add_char_in_fixed_pos_constraint(solver, char_vars, result_string[i], i)
-
-#         for i in range(5):
-#             if score[i] == 1:
-#                 solver = add_must_contain_constraint(solver, char_vars, result_string[i])
-#                 solver = add_banned_char_in_pos_constraint(solver, char_vars, result_string[i], i)
-
-#         # for i in range(5):
-#         #     if score[i] == 0:
-#         #         if (result_string[i] not in W):
-#         #             solver = add_banned_char_constraint(solver, char_vars, result_string[i])
-#         #         else:
-#         #             solver = add_only_one_time_constraint(solver, char_vars, result_string[i])
-#         for i in range(5):
-#             if score[i] == 0:
-#                 if tot_char_score(result_string, result_string[i], score) == 0:
-#                     solver = add_banned_char_constraint(solver, char_vars, result_string[i])
-#         attempts -= 1
-#     print("Failed, too many attempts")
-#     pass
 
 def tot_char_score(s, key, score):
     count = 0
@@ -182,27 +119,17 @@ def get_filtered_dict():
                 words.add(l)
     return words
 
-# def add_only_words_in_dict_constraint(solver, char_vars, dict: set):
-#     all_w_constaints = []
-#     for w in dict:
-#         w_constraint = []
-#         for i in range(WL):
-#             w_constraint.append(char_vars[i] == CHARS[w[i]])
-#         all_w_constaints.append(z3.And(w_constraint))
-    
-#     solver.add(z3.Or(all_w_constaints))
-#     return solver
-
 def add_only_words_in_dict_constraint(solver, char_vars, dict: set):
-    all_words_disjunction = []
-
-    for word in dict:
-        word_conjuction = z3.And([char_vars[index] == CHARS[letter] for index, letter in enumerate(word)])
-        all_words_disjunction.append(word_conjuction)
-
-    solver.add(z3.Or(all_words_disjunction))
-
+    all_w_constaints = []
+    for w in dict:
+        w_constraint = []
+        for i in range(WL):
+            w_constraint.append(char_vars[i] == CHARS[w[i]])
+        all_w_constaints.append(z3.And(w_constraint))
+    
+    solver.add(z3.Or(all_w_constaints))
     return solver
+
 
 def add_banned_char_constraint(solver, char_vars, char):
     for c_v in char_vars:
@@ -210,13 +137,13 @@ def add_banned_char_constraint(solver, char_vars, char):
         # solver.add(z3.Not(z3.eq(c_v, char)))
     return solver
 
-# def add_must_contain_constraint(solver, char_vars, char):
-#     constraint = []
-#     for c_v in char_vars:
-#         constraint.append(c_v == CHARS[char])
+def add_must_contain_constraint(solver, char_vars, char):
+    constraint = []
+    for c_v in char_vars:
+        constraint.append(c_v == CHARS[char])
 
-#     solver.add(z3.Or(constraint))
-#     return solver
+    solver.add(z3.Or(constraint))
+    return solver
 
 def add_must_contain_constraint(solver, char_vars, char):
     solver.add(z3.Or([letter_var == CHARS[char] for letter_var in char_vars]))
@@ -234,37 +161,17 @@ def add_char_in_fixed_pos_constraint(solver, char_vars, char, pos):
     return solver
 
 
-# def add_only_one_time_constraint(solver, char_vars, char):
-#     one_time = []
-    
-#     for c_v in char_vars:
-#         rule = []
-#         rule.append(c_v == CHARS[char])
-#         for other_c_v in char_vars:
-#             if other_c_v == c_v:
-#                 continue
-#             rule.append(other_c_v != CHARS[char])
-#         one_time.append(z3.And(rule))
-
-#     solver.add(z3.Or(one_time))
-#     return solver
-
-
 def add_only_one_time_constraint(solver, char_vars, char):
-    unique_letter_disjunction = []
-
-    for letter_var in char_vars:
-        this_letter_conjunction = [letter_var == CHARS[char]]
-        for other_letter_var in char_vars:
-            if letter_var == other_letter_var:
+    one_time = []
+    
+    for c_v in char_vars:
+        rule = []
+        rule.append(c_v == CHARS[char])
+        for other_c_v in char_vars:
+            if other_c_v == c_v:
                 continue
-            this_letter_conjunction.append(other_letter_var != CHARS[char])
-        unique_letter_disjunction.append(z3.And(this_letter_conjunction))
+            rule.append(other_c_v != CHARS[char])
+        one_time.append(z3.And(rule))
 
-    solver.add(z3.Or(unique_letter_disjunction))
-
+    solver.add(z3.Or(one_time))
     return solver
-
-
-if __name__ == "__main__":
-    main()

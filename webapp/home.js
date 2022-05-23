@@ -1,3 +1,5 @@
+// https://github.com/ianlenehan/wordle-clone
+
 function getSolution() {
   word = document.getElementById("key_input").value;
   document.getElementById("key_input").disable = true;
