@@ -1,6 +1,5 @@
-from re import sub
 import z3
-from feedback2 import wordleScore
+from .feedback import wordleScore
 import subprocess
 
 WL = 5
@@ -13,9 +12,17 @@ DICT_PATH = "/usr/share/dict/words"
 
 
 # TARGET = "teddy"
-TARGET = "world"
+# TARGET = "world"
 
-def main():
+
+def solve(target):
+    if len(target) != 5:
+        return False
+    cmd = subprocess.run(["grep","-w",target, "/usr/share/dict/words"])
+    if cmd.returncode == 1:
+        return False
+
+    
     solver = z3.Solver()
     char_vars = char_variables()
 
@@ -31,6 +38,8 @@ def main():
 
     # print(result)
 
+    solution = []
+
     attempts = 5
 
     while attempts >= 0:
@@ -38,15 +47,17 @@ def main():
         result = solver.check()
 
         result_string = model_to_string(char_vars, solver.model())
-        print(result_string)
+        # print(result_string)
 
-        score = wordleScore(TARGET, result_string)
+        score = wordleScore(target, result_string)
 
-        print(score)
+        # print(score)
+
+        solution.append((result_string, score))
 
         if sum(score) == 10:
-            print("Done")
-            return
+            # print("Done")
+            break
 
         for i in range(5):
             if score[i] == 2:
@@ -69,8 +80,66 @@ def main():
                 if tot_char_score(result_string, result_string[i], score) == 0:
                     solver = add_banned_char_constraint(solver, char_vars, result_string[i])
         attempts -= 1
-    print("Failed, too many attempts")
-    pass
+    return solution
+
+    
+
+# def main():
+#     solver = z3.Solver()
+#     char_vars = char_variables()
+
+#     solver = add_max_len_constraint(solver, char_vars)
+
+#     words = get_filtered_dict()
+
+#     solver = add_only_words_in_dict_constraint(solver, char_vars, words)
+
+#     W = [None,None,None,None,None]
+
+#     # result = solver.check()
+
+#     # print(result)
+
+#     attempts = 5
+
+#     while attempts >= 0:
+
+#         result = solver.check()
+
+#         result_string = model_to_string(char_vars, solver.model())
+#         print(result_string)
+
+#         score = wordleScore(TARGET, result_string)
+
+#         print(score)
+
+#         if sum(score) == 10:
+#             print("Done")
+#             return
+
+#         for i in range(5):
+#             if score[i] == 2:
+#                 W[i] = result_string[i]
+#                 solver = add_char_in_fixed_pos_constraint(solver, char_vars, result_string[i], i)
+
+#         for i in range(5):
+#             if score[i] == 1:
+#                 solver = add_must_contain_constraint(solver, char_vars, result_string[i])
+#                 solver = add_banned_char_in_pos_constraint(solver, char_vars, result_string[i], i)
+
+#         # for i in range(5):
+#         #     if score[i] == 0:
+#         #         if (result_string[i] not in W):
+#         #             solver = add_banned_char_constraint(solver, char_vars, result_string[i])
+#         #         else:
+#         #             solver = add_only_one_time_constraint(solver, char_vars, result_string[i])
+#         for i in range(5):
+#             if score[i] == 0:
+#                 if tot_char_score(result_string, result_string[i], score) == 0:
+#                     solver = add_banned_char_constraint(solver, char_vars, result_string[i])
+#         attempts -= 1
+#     print("Failed, too many attempts")
+#     pass
 
 def tot_char_score(s, key, score):
     count = 0
